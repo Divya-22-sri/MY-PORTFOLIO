@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DIVYASRI · robotic core</title>
+    <style>
+      /* === RESET / BASE — MATTE BLACK METAL === */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0b0b0e;
+        font-family: "Segoe UI", "Roboto", system-ui, sans-serif;
+        color: #ddd;
+        min-height: 100vh;
+        padding: 20px 20px 60px;
+        position: relative;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* industrial metal background with fine lines */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            circle at 15% 30%,
+            rgba(160, 40, 40, 0.1) 0%,
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 85% 70%,
+            rgba(180, 50, 50, 0.08) 0%,
+            transparent 45%
+          ),
+          repeating-linear-gradient(
+            50deg,
+            rgba(120, 120, 120, 0.02) 0px,
+            rgba(120, 120, 120, 0.02) 2px,
+            transparent 2px,
+            transparent 10px
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ===== FLOATING NEURAL PARTICLES ===== */
+      .particle {
+        position: fixed;
+        width: 5px;
+        height: 5px;
+        background: #c44;
+        border-radius: 50%;
+        filter: blur(1px) drop-shadow(0 0 5px #e33);
+        opacity: 0.5;
+        animation: rise linear infinite;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      @keyframes rise {
+        0% {
+          transform: translateY(110vh) scale(1);
+          opacity: 0.2;
+        }
+        80% {
+          opacity: 0.6;
+        }
+        100% {
+          transform: translateY(-10vh) scale(0.4);
+          opacity: 0;
+        }
+      }
+
+      /* ===== HEADER ===== */
+      .robot-head {
+        text-align: center;
+        position: relative;
+        z-index: 10;
+      }
+
+      .robot-head svg {
+        width: 200px;
+        filter: drop-shadow(0 0 15px rgba(220, 40, 40, 0.7));
+        animation: headSway 4s ease-in-out infinite alternate;
+      }
+
+      @keyframes headSway {
+        0% {
+          transform: rotate(-3deg) translateY(0);
+        }
+        100% {
+          transform: rotate(3deg) translateY(-5px);
+        }
+      }
+
+      .title {
+        text-align: center;
+        font-size: 3.8rem;
+        letter-spacing: 8px;
+        font-weight: 600;
+        color: #c2c2c8;
+        text-shadow: 0 0 20px #a22, 3px 3px 0 #1a1a1a;
+        margin-top: -15px;
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        letter-spacing: 4px;
+        color: #b4b4c0;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+        word-spacing: 6px;
+      }
+
+      /* ===== SEPARATE NAVIGATION PANEL ===== */
+      .nav-panel {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px 0 25px;
+        padding: 14px 18px;
+        background: #121217;
+        border: 2px solid #5f5f6b;
+        border-radius: 60px;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 6px 0 #1f1f24;
+        position: relative;
+        z-index: 25;
+        max-width: 950px;
+        width: fit-content;
+      }
+
+      .nav-btn {
+        background: linear-gradient(145deg, #2d2d35, #16161c);
+        border: 2px solid #8a8a9c;
+        color: #ddd;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 1.5px;
+        padding: 8px 18px;
+        border-radius: 40px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 0 #0a0a0e, inset 0 1px 4px rgba(255, 60, 60, 0.4);
+        cursor: pointer;
+        transition: 0.1s linear;
+      }
+
+      .nav-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 1px 0 #0a0a0e, inset 0 1px 6px red;
+      }
+
+      .nav-btn:hover {
+        background: #9f3e3e;
+        color: #000;
+        border-color: #f88;
+      }
+
+      /* ===== STACKED PANELS — ONE BY ONE ===== */
+      .panel-stack {
+        max-width: 1000px;
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        z-index: 20;
+        position: relative;
+      }
+
+      /* each panel = unique mechanical compartment */
+      .panel {
+        background: #13131a;
+        border: 3px solid #5d5d6b;
+        padding: 22px 28px 24px;
+        box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7), 0 8px 0 #1b1b20;
+        position: relative;
+        transition: all 0.2s;
+        width: 100%;
+      }
+
+      /* individual mechanical identity */
+      .panel:nth-child(1) {
+        border-radius: 40px 12px 40px 12px;
+        border-left-width: 6px;
+        border-left-color: #b55;
+      }
+      .panel:nth-child(2) {
+        border-radius: 12px 40px 12px 40px;
+        border-top: 6px solid #84849c;
+      }
+      .panel:nth-child(3) {
+        border-radius: 30px 30px 8px 8px;
+        border-right: 6px solid #c66;
+      }
+      .panel:nth-child(4) {
+        border-radius: 8px 30px 30px 8px;
+        border-bottom: 6px solid #a6a;
+      }
+      .panel:nth-child(5) {
+        border-radius: 40px 40px 8px 8px;
+        border-left: 6px solid #7a7a9a;
+        border-right: 6px solid #5a5a72;
+      }
+      .panel:nth-child(6) {
+        border-radius: 8px 8px 40px 40px;
+        border-top: 6px solid #b66;
+        border-bottom: 3px double #c44;
+      }
+      .panel:nth-child(7) {
+        border-radius: 20px 8px 20px 8px;
+        border-style: solid;
+        border-width: 3px 6px 6px 3px;
+        border-color: #8a8aa2 #b2b2c8 #b2b2c8 #8a8aa2;
+      }
+
+      /* metal rivets */
+      .panel::after {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border: 1px dashed rgba(180, 180, 200, 0.15);
+        border-radius: inherit;
+        pointer-events: none;
+      }
+
+      /* robot row: cute robot svg + motto + switch */
+      .robot-row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        background: rgba(20, 20, 30, 0.5);
+        padding: 10px 16px 10px 10px;
+        border: 1px solid #5a5a6a;
+        border-radius: 60px;
+        box-shadow: inset 0 0 8px #050505;
+      }
+
+      /* each robot SVG container */
+      .cute-robot {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+      }
+
+      /* robot SVG styling — now more colorful! */
+      .robot-svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 4px 4px #300);
+      }
+
+      .motto {
+        font-size: 1rem;
+        font-weight: 400;
+        color: #cecece;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        background: #1e1e26;
+        padding: 8px 18px;
+        border-radius: 40px;
+        border: 1px solid #b55;
+        white-space: nowrap;
+        box-shadow: inset 0 2px 5px black;
+      }
+
+      /* mechanical switch (clickable) — red lightning bolt */
+      .panel-switch {
+        margin-left: auto;
+        background: #2d2d36;
+        width: 48px;
+        height: 48px;
+        border-radius: 40% 40% 12px 12px;
+        border: 2px solid #a0a0b0;
+        cursor: pointer;
+        box-shadow: 0 5px 0 #111, inset 0 2px 8px red;
+        transition: 0.05s linear;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .panel-switch:active {
+        transform: translateY(5px);
+        box-shadow: 0 0 0 #111, inset 0 2px 8px red;
+      }
+
+      .panel-switch::after {
+        content: "⚡";
+        position: absolute;
+        top: 8px;
+        left: 12px;
+        font-size: 1.6rem;
+        color: #f33; /* bright red */
+        filter: drop-shadow(0 0 4px #f00);
+      }
+
+      /* hidden content compartment */
+      .panel-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+        background: rgba(0, 0, 0, 0.5);
+        border-top: 1px solid transparent;
+        margin-top: 0;
+        border-radius: 0 0 16px 16px;
+      }
+
+      .panel.expanded .panel-content {
+        max-height: 500px;
+        border-top: 2px solid #b55;
+        margin-top: 22px;
+        padding: 20px 18px;
+        background: #1c1c26;
+        box-shadow: inset 0 0 30px #0a0a0f;
+      }
+
+      /* inner text styling */
+      .content-inner {
+        color: #ccc;
+        font-size: 1rem;
+      }
+
+      .content-inner h3 {
+        color: #e6b0b0;
+        border-bottom: 1px solid #744;
+        font-size: 1.3rem;
+        margin: 0 0 14px;
+        padding-bottom: 5px;
+        letter-spacing: 1px;
+      }
+
+      .content-inner ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .content-inner li {
+        padding: 8px 0 8px 26px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="%23b44"/></svg>')
+          left center no-repeat;
+        border-bottom: 1px solid #333;
+        font-size: 1.05rem;
+      }
+
+      .content-inner p {
+        margin-bottom: 14px;
+        line-height: 1.5;
+        font-size: 1.05rem;
+      }
+
+      .content-inner strong {
+        color: #fa9;
+      }
+
+      /* simple email style for contact */
+      .contact-email {
+        background: #1e1e2a;
+        padding: 14px 20px;
+        border-radius: 60px;
+        border: 2px solid #b55;
+        font-size: 1.3rem;
+        font-weight: 500;
+        color: #fbb;
+        text-align: center;
+        box-shadow: inset 0 0 10px black, 0 4px 0 #3a2a2a;
+        letter-spacing: 1px;
+        display: inline-block;
+        width: 100%;
+      }
+
+      /* responsive */
+      @media (max-width: 650px) {
+        .panel {
+          padding: 18px 20px;
+        }
+        .robot-row {
+          gap: 10px;
+        }
+        .motto {
+          font-size: 0.8rem;
+          padding: 5px 10px;
+        }
+        .cute-robot {
+          width: 70px;
+          height: 70px;
+        }
+        .panel-switch {
+          width: 42px;
+          height: 42px;
+        }
+        .panel-switch::after {
+          font-size: 1.3rem;
+          left: 9px;
+          top: 6px;
+        }
+        .contact-email {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- neural floating particles -->
+    <script>
+      (function () {
+        for (let i = 0; i < 45; i++) {
+          let p = document.createElement("div");
+          p.className = "particle";
+          p.style.left = Math.random() * 100 + "%";
+          p.style.animationDuration = 7 + Math.random() * 15 + "s";
+          p.style.animationDelay = Math.random() * 7 + "s";
+          p.style.width = 3 + Math.random() * 6 + "px";
+          p.style.height = p.style.width;
+          p.style.background = `rgba(220, 60, 60, ${
+            0.3 + Math.random() * 0.5
+          })`;
+          document.body.appendChild(p);
+        }
+      })();
+    </script>
+
+    <!-- robot head (animated) -->
+    <div class="robot-head">
+      <svg viewBox="0 0 200 200">
+        <rect
+          x="30"
+          y="50"
+          width="140"
+          height="95"
+          rx="12"
+          ry="12"
+          fill="#1f1f2b"
+          stroke="#b77"
+          stroke-width="4"
+        />
+        <rect
+          x="50"
+          y="85"
+          width="100"
+          height="25"
+          fill="#300"
+          stroke="#a00"
+          stroke-width="3"
+          rx="8"
+        />
+        <circle cx="80" cy="98" r="10" fill="#f22" filter="url(#glow)" />
+        <circle cx="120" cy="98" r="10" fill="#f22" filter="url(#glow)" />
+        <line
+          x1="70"
+          y1="50"
+          x2="70"
+          y2="20"
+          stroke="#aaa"
+          stroke-width="5"
+          stroke-linecap="round"
+        />
+        <line
+          x1="130"
+          y1="50"
+          x2="130"
+          y2="20"
+          stroke="#aaa"
+          stroke-width="5"
+          stroke-linecap="round"
+        />
+        <circle cx="70" cy="15" r="8" fill="#b44" />
+        <circle cx="130" cy="15" r="8" fill="#b44" />
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
+            <feMerge>
+              <feMergeNode in="offsetblur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+    </div>
+    <div class="title">DIVYASRI</div>
+    <div class="subtitle">AI enthusiast · CSE student</div>
+
+    <!-- ===== SEPARATE NAVIGATION PANEL ===== -->
+    <div class="nav-panel">
+      <button class="nav-btn" data-target="home">HOME</button>
+      <button class="nav-btn" data-target="skills">SKILLS</button>
+      <button class="nav-btn" data-target="projects">PROJECTS</button>
+      <button class="nav-btn" data-target="education">EDUCATION</button>
+      <button class="nav-btn" data-target="cert">CERTIFICATION</button>
+      <button class="nav-btn" data-target="achievements">ACHIEVEMENTS</button>
+      <button class="nav-btn" data-target="contact">CONTACT</button>
+    </div>
+
+    <!-- ===== STACKED PANELS (each with unique, colorful robot) ===== -->
+    <div class="panel-stack">
+      <!-- HOME panel -->
+      <div class="panel" id="panel-home">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <circle
+                cx="30"
+                cy="30"
+                r="20"
+                fill="#5a4a8a"
+                stroke="#f99"
+                stroke-width="2.5"
+              />
+              <circle cx="22" cy="24" r="4" fill="white" />
+              <circle cx="38" cy="24" r="4" fill="white" />
+              <circle cx="24" cy="26" r="2" fill="#222" />
+              <circle cx="40" cy="26" r="2" fill="#222" />
+              <rect x="27" y="34" width="6" height="4" fill="#f66" rx="2" />
+              <circle
+                cx="30"
+                cy="15"
+                r="5"
+                fill="#fda"
+                stroke="#f44"
+                stroke-width="2"
+              />
+              <circle cx="27" cy="13" r="1.5" fill="white" />
+              <circle cx="33" cy="13" r="1.5" fill="white" />
+            </svg>
+          </div>
+          <span class="motto">// home::heart</span>
+          <div class="panel-switch" data-section="home"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ about me</h3>
+            <p>
+              A Computer Science and Engineering student with a strong interest
+              in Artificial Intelligence and Machine Learning.
+            </p>
+            <p>
+              Currently, I am expanding my knowledge in Deep Learning and
+              continuously improving my skills to stay aligned with industry
+              needs. I am eager to apply my learning in real-world environments,
+              contribute to innovative projects, and grow as a technology
+              professional.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS panel -->
+      <div class="panel" id="panel-skills">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <rect
+                x="15"
+                y="15"
+                width="30"
+                height="30"
+                rx="8"
+                fill="#3d6e8a"
+                stroke="#fc6"
+                stroke-width="2.5"
+              />
+              <circle cx="25" cy="28" r="4" fill="#fff" />
+              <circle cx="35" cy="28" r="4" fill="#fff" />
+              <circle cx="26" cy="29" r="2" fill="#222" />
+              <circle cx="36" cy="29" r="2" fill="#222" />
+              <rect x="27" y="36" width="6" height="3" fill="#f77" rx="1.5" />
+              <line
+                x1="30"
+                y1="10"
+                x2="30"
+                y2="17"
+                stroke="#fa7"
+                stroke-width="4"
+                stroke-linecap="round"
+              />
+              <circle
+                cx="30"
+                cy="8"
+                r="5"
+                fill="#fea"
+                stroke="#f66"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span class="motto">// skills matrix</span>
+          <div class="panel-switch" data-section="skills"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ programming languages</h3>
+            <ul>
+              <li>C</li>
+              <li>C++</li>
+              <li>Java</li>
+              <li>HTML</li>
+              <li>CSS</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS panel -->
+      <div class="panel" id="panel-projects">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <circle
+                cx="30"
+                cy="30"
+                r="18"
+                fill="#6a4e6e"
+                stroke="#fb8"
+                stroke-width="2.5"
+              />
+              <circle cx="22" cy="25" r="4" fill="white" />
+              <circle cx="38" cy="25" r="4" fill="white" />
+              <circle cx="23.5" cy="26.5" r="2" fill="#222" />
+              <circle cx="39.5" cy="26.5" r="2" fill="#222" />
+              <ellipse cx="30" cy="36" rx="6" ry="3" fill="#f77" />
+              <rect x="26" y="15" width="8" height="6" fill="#fc9" rx="2" />
+            </svg>
+          </div>
+          <span class="motto">// project bay</span>
+          <div class="panel-switch" data-section="projects"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ projects</h3>
+            <p>
+              <strong>1. University Management System (UMS)</strong><br />Using
+              Java Swing, MySQL, and JDBC connectivity.<br />Developed a
+              Java-based desktop application with MySQL database connectivity
+              using JDBC.
+            </p>
+            <p>
+              <strong>2. Q Forensics</strong><br />A hybrid quantum-classical
+              framework for deepfake detection via spatial-frequency fusion
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDUCATION panel -->
+      <div class="panel" id="panel-education">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <rect
+                x="15"
+                y="20"
+                width="30"
+                height="25"
+                rx="6"
+                fill="#7a5a4a"
+                stroke="#fb6"
+                stroke-width="2.5"
+              />
+              <circle cx="23" cy="32" r="4" fill="white" />
+              <circle cx="37" cy="32" r="4" fill="white" />
+              <circle cx="24" cy="33" r="2" fill="black" />
+              <circle cx="38" cy="33" r="2" fill="black" />
+              <rect x="27" y="40" width="6" height="3" fill="#f66" rx="1" />
+              <path d="M30 12 L34 20 L26 20 Z" fill="#fd9" />
+            </svg>
+          </div>
+          <span class="motto">// edu core</span>
+          <div class="panel-switch" data-section="education"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ education</h3>
+            <p>
+              <strong>Government College of Engineering, Salem</strong><br />B.E
+              Computer Science and Engineering (2023–2027) · CGPA: 8.98
+            </p>
+            <p>
+              <strong>Nivedha Matriculation Higher Secondary School</strong
+              ><br />Grade 12 (2022–2023) · Grade: 97.33
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CERTIFICATION panel -->
+      <div class="panel" id="panel-cert">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <circle
+                cx="30"
+                cy="30"
+                r="17"
+                fill="#8a6d4a"
+                stroke="#fa8"
+                stroke-width="2.5"
+              />
+              <circle cx="23" cy="25" r="4" fill="white" />
+              <circle cx="37" cy="25" r="4" fill="white" />
+              <circle cx="24" cy="26" r="2" fill="black" />
+              <circle cx="38" cy="26" r="2" fill="black" />
+              <rect x="27" y="33" width="6" height="5" fill="#f77" rx="2" />
+              <circle
+                cx="30"
+                cy="18"
+                r="5"
+                fill="#fea"
+                stroke="#f66"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span class="motto">// cert lock</span>
+          <div class="panel-switch" data-section="cert"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ certification</h3>
+            <p>Oracle Certified Foundations Associate</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS panel -->
+      <div class="panel" id="panel-achievements">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <rect
+                x="15"
+                y="18"
+                width="30"
+                height="28"
+                rx="10"
+                fill="#9a5f6a"
+                stroke="#fb7"
+                stroke-width="2.5"
+              />
+              <circle cx="24" cy="30" r="4" fill="white" />
+              <circle cx="36" cy="30" r="4" fill="white" />
+              <circle cx="25" cy="31" r="2" fill="black" />
+              <circle cx="37" cy="31" r="2" fill="black" />
+              <rect x="27" y="38" width="6" height="4" fill="#f77" rx="1" />
+              <polygon points="30,10 33,16 26,16" fill="#fd7" />
+            </svg>
+          </div>
+          <span class="motto">// trophy vault</span>
+          <div class="panel-switch" data-section="achievements"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ achievements</h3>
+            <p>
+              First prize in paper presentation at national level technical
+              symposium on topic:<br />Q Forensics: A hybrid quantum-classical
+              framework for deepfake detection via spatial-frequency fusion
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACT panel (simple email, no map) -->
+      <div class="panel" id="panel-contact">
+        <div class="robot-row">
+          <div class="cute-robot">
+            <svg class="robot-svg" viewBox="0 0 60 60">
+              <circle
+                cx="30"
+                cy="30"
+                r="19"
+                fill="#5f7a8a"
+                stroke="#fb8"
+                stroke-width="2.5"
+              />
+              <circle cx="22" cy="26" r="4" fill="white" />
+              <circle cx="38" cy="26" r="4" fill="white" />
+              <circle cx="23.5" cy="27.5" r="2" fill="black" />
+              <circle cx="39.5" cy="27.5" r="2" fill="black" />
+              <ellipse cx="30" cy="36" rx="5" ry="2.5" fill="#f77" />
+              <circle
+                cx="30"
+                cy="18"
+                r="5"
+                fill="#fea"
+                stroke="#f66"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span class="motto">// contact</span>
+          <div class="panel-switch" data-section="contact"></div>
+        </div>
+        <div class="panel-content">
+          <div class="content-inner">
+            <h3>⚙ contact</h3>
+            <!-- simple email only, as requested -->
+            <div class="contact-email">diyapyr@gmail.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ********** MECHANICAL INTERACTION + NAVIGATION SCROLL ********** -->
+    <script>
+      (function () {
+        // Toggle panel expansion
+        function togglePanel(panel) {
+          panel.classList.toggle("expanded");
+        }
+
+        // Scroll panel into view smoothly and expand it
+        function revealPanel(panelId) {
+          const panel = document.getElementById(panelId);
+          if (!panel) return;
+
+          // Expand the panel (if not already expanded)
+          if (!panel.classList.contains("expanded")) {
+            panel.classList.add("expanded");
+          }
+
+          // Smooth scroll to the panel
+          panel.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        // Attach click to all panel-switch buttons
+        document.querySelectorAll(".panel-switch").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const panel = e.currentTarget.closest(".panel");
+            if (panel) togglePanel(panel);
+          });
+        });
+
+        // Navigation buttons: reveal panel
+        document.querySelectorAll(".nav-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const target = btn.getAttribute("data-target");
+            let panelId = "";
+            if (target === "home") panelId = "panel-home";
+            else if (target === "skills") panelId = "panel-skills";
+            else if (target === "projects") panelId = "panel-projects";
+            else if (target === "education") panelId = "panel-education";
+            else if (target === "cert") panelId = "panel-cert";
+            else if (target === "achievements") panelId = "panel-achievements";
+            else if (target === "contact") panelId = "panel-contact";
+            if (panelId) revealPanel(panelId);
+          });
+        });
+      })();
+    </script>
+
+    <!-- metal signature -->
+    <div
+      style="
+        position: fixed;
+        bottom: 10px;
+        right: 20px;
+        color: #333;
+        font-size: 11px;
+        opacity: 0.3;
+      "
+    >
+      // ROBOTIC CORE v.6 //
+    </div>
+  </body>
+</html>
